@@ -1,51 +1,51 @@
 import pymongo
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import re
-def signin():
-    client = pymongo.MongoClient("mongodb://localhost:27017/")
-    db = client["authentication"]
-    connection = db["users"]
-    
-    while True:
-        user_name = input("USER NAME: ")
-        if user_name == "exit": return False
-        pattern = r'^\d+@geu\.ac\.in$'
-        if not re.match(pattern, user_name) or not connection.find_one({"user_name" : user_name}):
-            print("Invalid ID")
-        else:
-            while True:
-                user_password = input("PASSWORD: ")
-                if not connection.find_one({"user_name":  user_name, "password": user_password }):
-                    print("Wrong Password")
-                    print("press 1 to reset password")
-                    print("press 0 to continue")
-                    c = int (input("enter choice: "))
-                    if c== 1:
-                        while True:
-                            new_password = input("New Password: ")
-                            if new_password == "exit": return False
-                            if new_password.isspace():
-                                print("Password cannot be empty or spaces only")
-                                continue
-                            
-                            if not any(c.islower() for c in new_password):
-                                print("Password must have at least one lowercase letter")
-                                continue
-                            
-                            if not any(c.isupper() for c in new_password):
-                                print("Password must have at least one uppercase letter")
-                                continue
-                            
-                            if not any(c.isdigit() for c in new_password):
-                                print("Password must have at least one number")
-                                continue
-                            
-                            break
-                        connection.update_one(
-                            {"user_name": user_name},   
-                            {"$set": {"password": new_password}}
-                        )
-                else: return True
 
-if __name__ == "__main__":
-    signin()
+# app = FastAPI()
+router = APIRouter()
+
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
+
+@router.get("/sign_in", response_class=HTMLResponse)
+def signin_page(request: Request):
+    return templates.TemplateResponse("sign_in.html", {"request": request})
+
+
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client["authentication"]   
+collection = db["users"]
+
+@router.post("/sign_in", response_class=HTMLResponse)
+def signin_submit(request: Request, user_name: str = Form(...), user_password: str = Form(...)):
+
+    pattern = r'^\d+@geu\.ac\.in$'
+    if not re.match(pattern, user_name):
+        return templates.TemplateResponse("sign_in.html", {"request": request, "message": "invalid user name"})
+    else:
+        exist = collection.find_one({"user_name": user_name})
+        if not exist:
+            return templates.TemplateResponse("sign_in.html", {"request": request, "message": "User Name not Found"})
+
+
+    # if " " in user_password:
+    #     return templates.TemplateResponse("sign_in.html", {"request": request, "message": "password cannot be empty or space"})
+
+    # if not any(c.islower() for c in user_password):
+    #     return templates.TemplateResponse("sign_in.html", {"request": request, "message": "password must have lowercase letter"})
+
+    # if not any(c.isupper() for c in user_password):
+    #     return templates.TemplateResponse("sign_in.html", {"request": request, "message": "password must have uppercase letter"})
+
+    # if not any(c.isdigit() for c in user_password):
+    #     return templates.TemplateResponse("sign_in.html", {"request": request, "message": "atleast one number"})
+    if not collection.find_one({"user_name":  user_name, "password": user_password }):
+        return templates.TemplateResponse("sign_in.html", {"request": request, "message": "Wrong Password"})
     
+

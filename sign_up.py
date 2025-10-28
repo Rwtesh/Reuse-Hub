@@ -1,52 +1,59 @@
+
 import pymongo
-import keyboard
+from fastapi import FastAPI, Request, Form
+from fastapi import APIRouter
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import re
-def signup():
-    client = pymongo.MongoClient("mongodb://localhost:27017/")
-    db = client["authentication"]
-    connection = db["users"]
+
+# app = FastAPI()
+router = APIRouter()
+
+
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
+
+@router.get("/sign_up", response_class=HTMLResponse)
+def signup_page(request: Request):
+    return templates.TemplateResponse("sign_up.html", {"request": request})
+
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client["authentication"]   
+collection = db["users"]
+
+@router.post("/sign_up", response_class=HTMLResponse)
+def signup_submit(request: Request, user_name: str = Form(...), user_password: str = Form(...),  comform_password: str = Form(...)):
+
+    if " " in user_name:
+        return templates.TemplateResponse("sign_up.html", {"request": request, "message": "User name cant have space"})
+    pattern = r'^\d+@geu\.ac\.in$'
+    if not re.match(pattern, user_name):
+        return templates.TemplateResponse("sign_up.html", {"request": request, "message": "invalid user name"})
+    else:
+        exist = collection.find_one({"user_name": user_name})
+        if exist:
+            return templates.TemplateResponse("sign_up.html", {"request": request, "message": "user name already exist"})
+
+
+    if " " in user_password:
+        return templates.TemplateResponse("sign_up.html", {"request": request, "message": "password cannot be empty or space"})
+
+    if not any(c.islower() for c in user_password):
+        return templates.TemplateResponse("sign_up.html", {"request": request, "message": "password must have lowercase letter"})
+
+    if not any(c.isupper() for c in user_password):
+        return templates.TemplateResponse("sign_up.html", {"request": request, "message": "password must have uppercase letter"})
+
+    if not any(c.isdigit() for c in user_password):
+        return templates.TemplateResponse("sign_up.html", {"request": request, "message": "atleast one number"})
+
+    if user_password != comform_password:
+        return templates.TemplateResponse("sign_up.html", {"request": request, "message": "Password didn't Match"})
     
+    collection.insert_one({
+            "user_name": user_name,
+            "password": user_password
+        })
 
-    while True:
-        user_name = input("USER NAME:\n(Press 1 to go back) ")
-        if user_name == "1":
-            return False
-        if user_name == "exit": return False
-        pattern = r'^\d+@geu\.ac\.in$'
-        if not re.match(pattern, user_name):
-            print("Invalid ID")
-        else:
-            exist = connection.find_one({"user_name" : user_name})
-            if exist:
-                print("Account Already existed")
-            else: break
-
-    while True:
-        user_password = input("Password: \n(Press 1 to go back) ")
-        if user_password == "1":
-            return False
-        if user_password == "exit": return False
-        if user_password.isspace():
-            print("Password cannot be empty or spaces only")
-            continue
-
-        if not any(c.islower() for c in user_password):
-            print("Password must have at least one lowercase letter")
-            continue
-
-        if not any(c.isupper() for c in user_password):
-            print("Password must have at least one uppercase letter")
-            continue
-
-        if not any(c.isdigit() for c in user_password):
-            print("Password must have at least one number")
-            continue
-
-        break
-
-    connection.insert_one({"user_name": user_name, "password": user_password})
-
-    return True
-
-if __name__ == "__main__":
-    signup()
