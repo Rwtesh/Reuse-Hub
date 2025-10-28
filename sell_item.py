@@ -10,15 +10,15 @@ def add():
     semester = int(input("Enter your semester: "))
     item_name = input("Enter the name of item: ")
     item_discription =  input("enter the descripton: ")
-    price = float(int("Enter the price: "))
+    price = float(input("Enter the price: "))
     link = input("enter the image drive link: ")
-    if not drive_link.startswith("http://drive"):
+    if not link.startswith("https://drive"):
         print("Invalid link! Please paste a valid Google Drive link.")
         return
     else:
         Items = {
             "name": name,
-            "semester": sem,
+            "semester": semester,
             "program": program,
             "item_name": item_name,
             "item_discription": item_discription,
@@ -27,3 +27,6 @@ def add():
         }
     collection.insert_one(Items)
     print("Item added successfully!")
+
+if __name__ == "__main__":
+    add()
