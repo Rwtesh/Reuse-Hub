@@ -8,8 +8,6 @@ collection = db["notes_info"]
 
 
 def main():
-    check = authentication()
-    if check == True:
         while True:
             print("\n===== NOTES PORTAL =====")
             print("1. Add Notes (Google Drive link)")
