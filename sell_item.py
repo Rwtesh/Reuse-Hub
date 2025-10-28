@@ -16,7 +16,7 @@ def add():
         print("Invalid link! Please paste a valid Google Drive link.")
         return
     else:
-        note_doc = {
+        Items = {
             "name": name,
             "semester": sem,
             "program": program,
@@ -25,6 +25,5 @@ def add():
             "price": price,
             "link": link
         }
+    collection.insert_one(Items)
     print("Item added successfully!")
-
-    
