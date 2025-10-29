@@ -1,5 +1,5 @@
 import pymongo
-from main import authentication
+# from main import authentication
 
 
 client = pymongo.MongoClient("mongodb://localhost:27017/")
