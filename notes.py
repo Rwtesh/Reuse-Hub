@@ -2,6 +2,10 @@ from fastapi import FastAPI, Request, Form, APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import pymongo
+<<<<<<< HEAD
+=======
+# from main import authentication
+>>>>>>> b232853e4a5c741be6e2333036d773cf127076a0
 
 
 client = pymongo.MongoClient("mongodb://localhost:27017/")
