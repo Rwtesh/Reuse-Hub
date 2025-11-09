@@ -1,8 +1,7 @@
 import pymongo
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import APIRouter, Request
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import re
 
@@ -34,18 +33,7 @@ def signin_submit(request: Request, user_name: str = Form(...), user_password: s
             return templates.TemplateResponse("sign_in.html", {"request": request, "message": "User Name not Found"})
 
 
-    # if " " in user_password:
-    #     return templates.TemplateResponse("sign_in.html", {"request": request, "message": "password cannot be empty or space"})
-
-    # if not any(c.islower() for c in user_password):
-    #     return templates.TemplateResponse("sign_in.html", {"request": request, "message": "password must have lowercase letter"})
-
-    # if not any(c.isupper() for c in user_password):
-    #     return templates.TemplateResponse("sign_in.html", {"request": request, "message": "password must have uppercase letter"})
-
-    # if not any(c.isdigit() for c in user_password):
-    #     return templates.TemplateResponse("sign_in.html", {"request": request, "message": "atleast one number"})
     if not collection.find_one({"user_name":  user_name, "password": user_password }):
         return templates.TemplateResponse("sign_in.html", {"request": request, "message": "Wrong Password"})
     
-
+    return RedirectResponse(url="/sell_items", status_code=303)

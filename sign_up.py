@@ -2,9 +2,9 @@
 import pymongo
 from fastapi import FastAPI, Request, Form
 from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
+
 import re
 
 # app = FastAPI()
@@ -57,3 +57,4 @@ def signup_submit(request: Request, user_name: str = Form(...), user_password: s
             "password": user_password
         })
 
+    return RedirectResponse(url="/sell_items", status_code=303)

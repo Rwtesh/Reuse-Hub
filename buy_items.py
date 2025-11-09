@@ -1,8 +1,19 @@
 import pymongo
+from fastapi import FastAPI, Request, Form, APIRouter
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["authentication"]
 collection = db["items"]
+
+router  = APIRouter()
+templates = Jinja2Templates(directory="templates")
+
+@router.get("/buy_items", response_class=HTMLResponse)
+def get_items(request: Request):
+    items = list(collection.find())
+    return templates.TemplateResponse("buy_items.html", {"request": request, "items": items})
 
 def formatItem(doc):
     name = doc.get("name", "")

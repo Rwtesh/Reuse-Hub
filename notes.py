@@ -1,46 +1,36 @@
+from fastapi import FastAPI, Request, Form, APIRouter
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 import pymongo
-from main import authentication
 
 
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["notes_database"]
 collection = db["notes_info"]
 
+router  = APIRouter()
+templates = Jinja2Templates(directory="templates")
+@router.get("/notes", response_class=HTMLResponse)
+def get_notes(request: Request):
+    notes = list(collection.find())
+    return templates.TemplateResponse("notes.html", {"request": request, "notes": notes})
 
-def main():
-        while True:
-            print("\n===== NOTES PORTAL =====")
-            print("1. Add Notes (Google Drive link)")
-            print("2. Show Notes")
-            print("3. Exit")
-            choice = input("Enter your choice: ")
-
-            if choice == "1":
-                add_notes()
-            elif choice == "2":
-                show_notes()
-            elif choice == "3":
-                print("Exiting...")
-                break
-            else:
-                print("Invalid choice! Try again.")
-
-def add_notes():
-    print("\n--- Add New Notes ---")
-    name = input("Your Name: ").strip()
-    sem = input("Semester: ").strip()
-    branch = input("Branch: ").strip()
-    subject = input("Subject: ").strip()
-    chapter = input("Chapter: ").strip()
-    drive_link = input("Enter Google Drive link of the PDF only: ").strip()
-
-    if not drive_link.startswith("http://drive"):
-        print("Invalid link! Please paste a valid Google Drive link.")
-        return
+@router.post("/add_note")
+def add_note(
+    name: str = Form(...),
+    semester: str = Form(...),
+    branch: str = Form(...),
+    subject: str = Form(...),
+    chapter: str = Form(...),
+    drive_link: str = Form(...)
+):
+    if not drive_link.startswith("https://drive"):
+        print("Invalid Drive link!")
+        return RedirectResponse(url="/notes", status_code=303)
 
     note_doc = {
         "name": name,
-        "semester": sem,
+        "semester": semester,
         "branch": branch,
         "subject": subject,
         "chapter": chapter,
@@ -48,30 +38,16 @@ def add_notes():
     }
 
     collection.insert_one(note_doc)
-    print("Notes link added successfully!")
+    return RedirectResponse(url="/notes", status_code=303)
 
-def show_notes():
-    print("\n--- View Notes ---")
-    branch = input("Enter Branch: ").strip()
-    subject = input("Enter Subject: ").strip()
-
-    notes = collection.find({"branch": branch, "subject": subject})
-
-    found = False
-    for note in notes:
-        found = True
-        print("\n-"*30)
-        print(f"Name: {note['name']}")
-        print(f"Semester: {note['semester']}")
-        print(f"Branch: {note['branch']}")
-        print(f"Subject: {note['subject']}")
-        print(f"Chapter: {note['chapter']}")
-        print(f"Drive Link: {note['drive_link']}")
-        print("-"*30)
-
-    if not found:
-        print("No notes found for that branch and subject.")
-
-
-if __name__ == "__main__":
-    main()
+@router.get("/find_note", response_class=HTMLResponse)
+def find_note(request: Request, query: str = ""):
+    search_filter = {
+        "$or": [
+            {"branch": {"$regex": query, "$options": "i"}},
+            {"subject": {"$regex": query, "$options": "i"}},
+            {"chapter": {"$regex": query, "$options": "i"}}
+        ]
+    }
+    notes = list(collection.find(search_filter))
+    return templates.TemplateResponse("notes.html", {"request": request, "notes": notes})
