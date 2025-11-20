@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Chats</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: 20px auto; }
+    ul { list-style-type: none; padding: 0; }
+    li { margin: 8px 0; }
+    a { text-decoration: none; color: #007bff; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h2>Chats for {{ current_user }}</h2>
+
+  {% if partners %}
+    <ul>
+      {% for p in partners %}
+        <li>
+          {{ p }} - <a href="/chat/{{ p }}">Open Chat</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No chats yet.</p>
+  {% endif %}
+</body>
+</html>

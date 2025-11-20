@@ -127,6 +127,7 @@
     <a href="/buy_items" class="active">Buy Item</a>
     <a href="/sell_items">Sell Item</a>
     <a href="/notes">Notes</a>
+    <a href="/chats">My Chats</a>
   </div>
 
   <div class="content">
@@ -161,7 +162,7 @@
             <p><strong>Program:</strong> {{ item.program }}</p>
             <p><strong>Semester:</strong> {{ item.semester }}</p>
             <a href="{{ item.link }}" target="_blank" class="btn btn-success btn-sm mt-2">View Image</a>
-            <a href="/chat/{{ item.name }}" class="btn btn-primary btn-sm mt-2">
+            <a href="/chat/{{ item.seller_id or item.name }}" class="btn btn-primary btn-sm mt-2">
     Message Seller
 </a>
           </div>

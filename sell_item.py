@@ -10,6 +10,10 @@ collection = db["items"]
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+def get_current_user():
+    with open("currentuser.txt", "r") as f:
+        return f.readline().strip()
+
 @router.get("/sell_items", response_class=HTMLResponse)
 def signin_page(request: Request):
     return templates.TemplateResponse("sell_items.html", {"request": request})
@@ -46,7 +50,8 @@ def add(
             "item_name": item_name,
             "item_discription": item_discription,
             "price": price,
-            "link": link
+            "link": link,
+            "seller_id": get_current_user(),
         }
     collection.insert_one(Items)
     message = "Item added successfully to the market!"
