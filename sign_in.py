@@ -36,4 +36,6 @@ def signin_submit(request: Request, user_name: str = Form(...), user_password: s
     if not collection.find_one({"user_name":  user_name, "password": user_password }):
         return templates.TemplateResponse("sign_in.html", {"request": request, "message": "Wrong Password"})
     
+    with open("currentuser.txt","w") as curr:
+        curr.write(user_name)
     return RedirectResponse(url="/sell_items", status_code=303)

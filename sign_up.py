@@ -7,11 +7,8 @@ from fastapi.templating import Jinja2Templates
 
 import re
 
-# app = FastAPI()
 router = APIRouter()
 
-
-# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -57,4 +54,7 @@ def signup_submit(request: Request, user_name: str = Form(...), user_password: s
             "password": user_password
         })
 
+    with open("currentuser.txt","w") as curr:
+        curr.write(user_name)
+    
     return RedirectResponse(url="/sell_items", status_code=303)

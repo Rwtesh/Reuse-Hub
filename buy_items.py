@@ -1,71 +1,70 @@
 import pymongo
-from fastapi import FastAPI, Request, Form, APIRouter
+from bson import ObjectId
+from fastapi import FastAPI, Request, Form, APIRouter, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["authentication"]
 collection = db["items"]
-
-router  = APIRouter()
+router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+def get_current_user():
+    with open("currentuser.txt", "r") as f:
+        return f.readline().strip()
+    
+
 @router.get("/buy_items", response_class=HTMLResponse)
-def get_items(request: Request):
+async def buy_items(request: Request):
     items = list(collection.find())
-    return templates.TemplateResponse("buy_items.html", {"request": request, "items": items})
+    for item in items:
+        item["_id"] = str(item["_id"])
+    return templates.TemplateResponse(
+    "buy_items.html",
+    {
+        "request": request,
+        "items": items,
+        "buyer": get_current_user()
+    }
+)
 
-def formatItem(doc):
-    name = doc.get("name", "")
-    program = doc.get("program", "")
-    semester = doc.get("semester", "")
-    item_name = doc.get("item_name", "")
-    item_discription = doc.get("item_discription", "")
-    price = doc.get("price", "")
-    link = doc.get("link", "")
-    return f"Seller: {name} | Program: {program} | Semester: {semester}\nItem: {item_name} | Price: {price}\nDesc: {item_discription}\nLink: {link}"
 
-def printItems(docs):
-    if not docs:
-        print("No items found.")
-        return
-    for doc in docs:
-        print("-" * 40)
-        print(formatItem(doc))
-    print("-" * 40)
+@router.get("/item/{item_id}", response_class=HTMLResponse)
+async def item_detail(request: Request, item_id: str):
+    item = collection.find_one({"_id": ObjectId(item_id)})
+    if not item:
+        return HTMLResponse("<h3>Item not found.</h3>", status_code=404)
 
-def showAll(query):
-    docs = list(collection.find(query))
-    if not docs:
-        print("No items found.")
-        return
-    printItems(docs)
+    return templates.TemplateResponse("item_detail.html", {"request": request, "item": item})
 
-def listItems():
-    showAll({})
 
-def searchItems():
-    q_name = input("Search by item name: ").strip()
-    query = {}
-    if q_name:
-        query["item_name"] = {"$regex": q_name, "$options": "i"}
-    showAll(query)
+# @router.get("/chat/{seller}", response_class=HTMLResponse)
+# async def chat_page(request: Request, seller: str, buyer: str = Query(None)):
+#     if buyer is None:
+#         buyer = get_current_user()
 
-def browse():
-    while True:
-        print("1) List all items")
-        print("2) Search items")
-        print("3) Quit")
-        choice = input("> ").strip()
-        if choice == "1":
-            listItems()
-        elif choice == "2":
-            searchItems()
-        elif choice == "3":
-            break
-        else:
-            print("Invalid choice.")
+#     return templates.TemplateResponse(
+#         "chat.html",
+#         {
+#             "request": request,
+#             "seller_name": seller,
+#             "buyer": buyer
+#         }
+#     )
 
-if __name__ == "__main__":
-    browse()
- 
+
+@router.get("/find", response_class=HTMLResponse)
+def find(request: Request, query: str = ""):
+    search_filter = {}
+    if query:
+        search_filter = {"item_name": {"$regex": query, "$options": "i"}}
+
+    items = list(collection.find(search_filter))
+    for item in items:
+        item["_id"] = str(item["_id"])
+
+    return templates.TemplateResponse(
+        "buy_items.html",
+        {"request": request, "items": items, "search": query, "buyer": get_current_user()}
+    )
