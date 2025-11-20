@@ -52,6 +52,7 @@ def add(
             "price": price,
             "link": link,
             "seller_id": get_current_user(),
+            "is_sold": False,
         }
     collection.insert_one(Items)
     message = "Item added successfully to the market!"
