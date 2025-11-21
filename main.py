@@ -7,6 +7,11 @@ from sell_item import router as sell_item_r
 from chat import router as chat_r
 from buy_items import router as buy_r
 app = FastAPI()
+from fastapi.responses import RedirectResponse
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/sign_in")
 
 app.include_router(sign_in_router)
 app.include_router(sign_up_router)
