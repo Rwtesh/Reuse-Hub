@@ -40,20 +40,6 @@ async def item_detail(request: Request, item_id: str):
     return templates.TemplateResponse("item_detail.html", {"request": request, "item": item})
 
 
-# @router.get("/chat/{seller}", response_class=HTMLResponse)
-# async def chat_page(request: Request, seller: str, buyer: str = Query(None)):
-#     if buyer is None:
-#         buyer = get_current_user()
-
-#     return templates.TemplateResponse(
-#         "chat.html",
-#         {
-#             "request": request,
-#             "seller_name": seller,
-#             "buyer": buyer
-#         }
-#     )
-
 
 @router.get("/find", response_class=HTMLResponse)
 def find(request: Request, query: str = ""):
